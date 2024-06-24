@@ -6,7 +6,7 @@ import Unit from "@/components/views/Unit.vue";
 interface Unit {
   unitID: string
   unitName: string
-  unitAddress: string
+  address: string
 }
 
 
@@ -53,7 +53,7 @@ const handleAdd = () => {
   form.value = {
     unitID: '',
     unitName: '',
-    unitAddress: '',
+    address: '',
   };
   addFormVisible.value = true;
 }
@@ -71,7 +71,7 @@ const addUnit = () => {
 const searchParams = reactive({
   unitID: '',
   unitName: '',
-  unitAddress: '',
+  address: '',
 })
 const search = (searchParams: Unit) => {
   alert(searchParams.unitID)
@@ -90,7 +90,7 @@ const search = (searchParams: Unit) => {
             <el-input v-model="searchParams.unitName" placeholder="单位名称" clearable />
           </el-form-item>
           <el-form-item label="单位地址">
-            <el-input v-model="searchParams.unitAddress" placeholder="单位地址" clearable />
+            <el-input v-model="searchParams.address" placeholder="单位地址" clearable />
           </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="search(searchParams)">查询</el-button>
@@ -103,7 +103,7 @@ const search = (searchParams: Unit) => {
         <el-table :data="unitList" style="width: 100%">
           <el-table-column prop="unitID" label="单位ID" width="180" />
           <el-table-column prop="unitName" label="单位名称" width="180" />
-          <el-table-column prop="unitAddress" label="单位地址" width="180" />
+          <el-table-column prop="address" label="单位地址" width="180" />
           <el-table-column align="right">
             <template #header>
               <el-button size="small" type="success" @click="handleAdd">
@@ -135,7 +135,7 @@ const search = (searchParams: Unit) => {
               <el-input v-model="form.unitName" autocomplete="on" />
             </el-form-item>
             <el-form-item label="单位地址" :label-width="formLabelWidth">
-              <el-input v-model="form.unitAddress" autocomplete="on" />
+              <el-input v-model="form.address" autocomplete="on" />
             </el-form-item>
           </el-form>
           <template #footer>
@@ -159,7 +159,7 @@ const search = (searchParams: Unit) => {
               <el-input v-model="form.unitName" autocomplete="on" />
             </el-form-item>
             <el-form-item label="单位地址" :label-width="formLabelWidth">
-              <el-input v-model="form.unitAddress" autocomplete="on" />
+              <el-input v-model="form.address" autocomplete="on" />
             </el-form-item>
           </el-form>
           <template #footer>

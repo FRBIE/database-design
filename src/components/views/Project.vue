@@ -2,16 +2,17 @@
 import {onMounted, reactive, ref} from "vue";
 import axios from "axios";
 import Project from "@/components/views/Project.vue";
+import {extractDateFormat} from "element-plus";
 
 interface Project {
   projectID: string
   projectName: string
   projectLevel: string
   managerID: string
-  startDate: string
+  startDate: Date
   budget: string
 }
-
+const loading = ref(false) //动态效果-加载动画
 
 // 定义一个 ref 来存储项目列表数据
 let projectList = ref([]);
@@ -47,7 +48,7 @@ const editFormVisible = ref(false)
 const addFormVisible = ref(false)
 const form = ref(Project);
 const formLabelWidth = '140px'
-const handleEdit = (index: number, row: Project) => {
+const handleEdit = ( row: Project) => {
   editFormVisible.value = true;
   Object.assign(form.value, row);
 
@@ -63,16 +64,47 @@ const handleAdd = () => {
   };
   addFormVisible.value = true;
 }
-const handleDelete = (index: number, row: Project) => {
-  alert(row.projectID)
+const handleDelete = async (row: Project) => {
+  try {
+    // 发起异步请求获取项目列表数据
+    const response =  await axios.post('/project/delete', {
+      id: row.projectID
+    });
+    if(response.data.code === 0){
+      getProjectList();
+      alert("删除成功")
+    }
+  } catch (error) {
+    alert('删除失败，请重试');
+  }
 }
 
-const editProject = (form: Project) => {
-  alert(form.projectID)
-  editFormVisible.value = false;
+const  editProject = async (form: Project) => {
+
+  try {
+    // 发起异步请求获取项目列表数据
+    const response = await axios.post('/project/edit', form);
+    if(response.data.code === 0){
+      getProjectList();
+      alert("修改成功")
+      editFormVisible.value = false;
+    }
+  } catch (error) {
+    alert('修改失败，请重试');
+  }
 }
-const addProject = () => {
-  addFormVisible.value = false;
+const addProject = async (form: Project) => {
+  try {
+    // 发起异步请求获取项目列表数据
+    const response = await axios.post('/project/add', form);
+    if(response.data.code === 0){
+      getProjectList();
+      alert("添加成功")
+      addFormVisible.value = false;
+    }
+  } catch (error) {
+    alert('添加失败，请重试');
+  }
 }
 const searchParams = reactive({
   projectID: '',
@@ -82,9 +114,28 @@ const searchParams = reactive({
   startDate: '',
   budget: ''
 })
-const search = (searchParams: Project) => {
-  alert(searchParams.projectID)
-  alert(searchParams.startDate)
+const search = async (searchParams: Project) => {
+  loading.value = true;
+  try {
+    // 发起异步请求获取项目列表数据
+    const response = await axios.post('/project/search', searchParams);
+    if(response.data.code === 0){
+      projectList.value = response.data.data;
+      loading.value = false;
+    }
+  } catch (error) {
+    alert('搜索失败，请重试');
+    loading.value = false;
+  }
+}
+const resetSearch = async () =>{
+  searchParams.projectID = "";
+  searchParams.projectName = "";
+  searchParams.projectLevel = "";
+  searchParams.managerID = "";
+  searchParams.startDate = "";
+  searchParams.budget = "";
+  getProjectList();
 }
 </script>
 
@@ -92,7 +143,7 @@ const search = (searchParams: Project) => {
   <div class="common-layout">
     <el-container>
         <el-header>
-          <el-form :inline="true" :model="searchParams" class="demo-form-inline">
+          <el-form :inline="true" :model="searchParams" class="demo-form-inline" >
             <el-form-item label="项目ID">
               <el-input v-model="searchParams.projectID" placeholder="项目ID" clearable />
             </el-form-item>
@@ -111,6 +162,8 @@ const search = (searchParams: Project) => {
                   type="date"
                   placeholder="请选择立项日期"
                   clearable
+                  format="YYYY-MM-DD"
+                  value-format="YYYY-MM-DD"
               />
             </el-form-item>
             <el-form-item label="预算(元)">
@@ -119,12 +172,15 @@ const search = (searchParams: Project) => {
             <el-form-item>
               <el-button type="primary" @click="search(searchParams)">查询</el-button>
             </el-form-item>
+            <el-form-item>
+              <el-button type="danger" @click="resetSearch">重置</el-button>
+            </el-form-item>
           </el-form>
       </el-header>
       <br>
       <br>
       <el-main>
-        <el-table :data="projectList" style="width: 100%">
+        <el-table :data="projectList" style="width: 100%" v-loading="loading">
           <el-table-column prop="projectID" label="项目ID" width="180" />
           <el-table-column prop="projectName" label="项目名称" width="180" />
           <el-table-column prop="projectLevel" label="项目级别" width="180" />
@@ -135,19 +191,19 @@ const search = (searchParams: Project) => {
 
             <template #header>
               <el-button size="small" type="success" @click="handleAdd">
-                Add
+                添加项目
               </el-button>
             </template>
             <template #default="scope">
-              <el-button size="small"  type="info" @click="handleEdit(scope.$index, scope.row)">
-                Edit
+              <el-button size="small"  type="info" @click="handleEdit(scope.row)">
+                编辑
               </el-button>
               <el-button
                   size="small"
                   type="danger"
-                  @click="handleDelete(scope.$index, scope.row)"
+                  @click="handleDelete(scope.row)"
               >
-                Delete
+                删除
               </el-button>
             </template>
           </el-table-column>
@@ -156,9 +212,9 @@ const search = (searchParams: Project) => {
 
         <el-dialog v-model="addFormVisible" title="增加项目" width="500">
           <el-form :model="form">
-            <el-form-item label="项目ID" :label-width="formLabelWidth">
-              <el-input v-model="form.projectID" autocomplete="on" />
-            </el-form-item>
+<!--            <el-form-item label="项目ID" :label-width="formLabelWidth">-->
+<!--              <el-input v-model="form.projectID" autocomplete="on" />-->
+<!--            </el-form-item>-->
             <el-form-item label="项目名称" :label-width="formLabelWidth">
               <el-input v-model="form.projectName" autocomplete="on" />
             </el-form-item>
@@ -169,7 +225,13 @@ const search = (searchParams: Project) => {
               <el-input v-model="form.managerID" autocomplete="on" />
             </el-form-item>
             <el-form-item label="立项日期" :label-width="formLabelWidth">
-              <el-input v-model="form.startDate" autocomplete="on" />
+              <el-date-picker
+                  v-model="form.startDate"
+                  type="date"
+                  placeholder="请选择立项日期"
+                  format="YYYY-MM-DD"
+                  value-format="YYYY-MM-DD"
+              />
             </el-form-item>
             <el-form-item label="预算(元)" :label-width="formLabelWidth">
               <el-input v-model="form.budget" autocomplete="on" />
@@ -178,8 +240,8 @@ const search = (searchParams: Project) => {
           <template #footer>
             <div class="dialog-footer">
               <el-button @click="handleAdd">取消</el-button>
-              <el-button type="primary" @click="addProject()">
-                确认
+              <el-button type="primary" @click="addProject(form)">
+                确认添加
               </el-button>
             </div>
           </template>
@@ -190,7 +252,7 @@ const search = (searchParams: Project) => {
         <el-dialog v-model="editFormVisible" title="项目信息修改" width="500">
           <el-form :model="form">
             <el-form-item label="项目ID" :label-width="formLabelWidth">
-              <el-input v-model="form.projectID" autocomplete="on" />
+              <el-input v-model="form.projectID" autocomplete="on" :disabled="true"/>
             </el-form-item>
             <el-form-item label="项目名称" :label-width="formLabelWidth">
               <el-input v-model="form.projectName" autocomplete="on" />
@@ -202,7 +264,13 @@ const search = (searchParams: Project) => {
               <el-input v-model="form.managerID" autocomplete="on" />
             </el-form-item>
             <el-form-item label="立项日期" :label-width="formLabelWidth">
-              <el-input v-model="form.startDate" autocomplete="on" />
+              <el-date-picker
+                  v-model="form.startDate"
+                  type="date"
+                  placeholder="请选择立项日期"
+                  format="YYYY-MM-DD"
+                  value-format="YYYY-MM-DD"
+              />
             </el-form-item>
             <el-form-item label="预算(元)" :label-width="formLabelWidth">
               <el-input v-model="form.budget" autocomplete="on" />
@@ -210,9 +278,9 @@ const search = (searchParams: Project) => {
           </el-form>
           <template #footer>
             <div class="dialog-footer">
-              <el-button @click="editFormVisible = false">Cancel</el-button>
+              <el-button @click="editFormVisible = false">取消</el-button>
               <el-button type="primary" @click="editProject(form)">
-                Confirm
+                确认修改
               </el-button>
             </div>
           </template>
