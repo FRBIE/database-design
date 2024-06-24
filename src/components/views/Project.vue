@@ -9,6 +9,7 @@ interface Project {
   projectName: string
   projectLevel: string
   managerID: string
+  managerName: string
   startDate: Date
   budget: string
 }
@@ -58,7 +59,7 @@ const handleAdd = () => {
     projectID: '',
     projectName: '',
     projectLevel: '',
-    managerID: '',
+    managerName: '',
     startDate: '',
     budget: ''
   };
@@ -88,6 +89,8 @@ const  editProject = async (form: Project) => {
       getProjectList();
       alert("修改成功")
       editFormVisible.value = false;
+    }else{
+      alert(response.data.description);
     }
   } catch (error) {
     alert('修改失败，请重试');
@@ -101,6 +104,8 @@ const addProject = async (form: Project) => {
       getProjectList();
       alert("添加成功")
       addFormVisible.value = false;
+    }else{
+      alert(response.data.description);
     }
   } catch (error) {
     alert('添加失败，请重试');
@@ -110,7 +115,7 @@ const searchParams = reactive({
   projectID: '',
   projectName: '',
   projectLevel: '',
-  managerID: '',
+  managerName: '',
   startDate: '',
   budget: ''
 })
@@ -121,18 +126,20 @@ const search = async (searchParams: Project) => {
     const response = await axios.post('/project/search', searchParams);
     if(response.data.code === 0){
       projectList.value = response.data.data;
-      loading.value = false;
+
+    }else{
+      alert(response.data.description);
     }
   } catch (error) {
     alert('搜索失败，请重试');
-    loading.value = false;
   }
+  loading.value = false;
 }
 const resetSearch = async () =>{
   searchParams.projectID = "";
   searchParams.projectName = "";
   searchParams.projectLevel = "";
-  searchParams.managerID = "";
+  searchParams.managerName = "";
   searchParams.startDate = "";
   searchParams.budget = "";
   getProjectList();
@@ -143,6 +150,7 @@ const resetSearch = async () =>{
   <div class="common-layout">
     <el-container>
         <el-header>
+
           <el-form :inline="true" :model="searchParams" class="demo-form-inline" >
             <el-form-item label="项目ID">
               <el-input v-model="searchParams.projectID" placeholder="项目ID" clearable />
@@ -153,8 +161,8 @@ const resetSearch = async () =>{
             <el-form-item label="项目级别">
               <el-input v-model="searchParams.projectLevel" placeholder="项目级别" clearable />
             </el-form-item>
-            <el-form-item label="负责人ID">
-              <el-input v-model="searchParams.managerID" placeholder="负责人ID" clearable />
+            <el-form-item label="负责人姓名">
+              <el-input v-model="searchParams.managerName" placeholder="负责人姓名" clearable />
             </el-form-item>
             <el-form-item label="立项日期">
               <el-date-picker
@@ -167,7 +175,7 @@ const resetSearch = async () =>{
               />
             </el-form-item>
             <el-form-item label="预算(元)">
-              <el-input v-model="searchParams.budget" placeholder="预算(元)" clearable />
+              <el-input type="number" v-model="searchParams.budget" autocomplete="on" placeholder="请输入金额，如1000.8" />
             </el-form-item>
             <el-form-item>
               <el-button type="primary" @click="search(searchParams)">查询</el-button>
@@ -176,15 +184,17 @@ const resetSearch = async () =>{
               <el-button type="danger" @click="resetSearch">重置</el-button>
             </el-form-item>
           </el-form>
+
       </el-header>
       <br>
       <br>
       <el-main>
+
         <el-table :data="projectList" style="width: 100%" v-loading="loading">
           <el-table-column prop="projectID" label="项目ID" width="180" />
           <el-table-column prop="projectName" label="项目名称" width="180" />
           <el-table-column prop="projectLevel" label="项目级别" width="180" />
-          <el-table-column prop="managerID" label="负责人ID" width="180" />
+          <el-table-column prop="managerName" label="负责人姓名" width="180" />
           <el-table-column prop="startDate" label="立项日期" width="180" />
           <el-table-column prop="budget" label="预算(元)" width="180" />
           <el-table-column align="right">
@@ -221,8 +231,8 @@ const resetSearch = async () =>{
             <el-form-item label="项目级别" :label-width="formLabelWidth">
               <el-input v-model="form.projectLevel" autocomplete="on" />
             </el-form-item>
-            <el-form-item label="负责人ID" :label-width="formLabelWidth">
-              <el-input v-model="form.managerID" autocomplete="on" />
+            <el-form-item label="负责人姓名" :label-width="formLabelWidth">
+              <el-input v-model="form.managerName" autocomplete="on" />
             </el-form-item>
             <el-form-item label="立项日期" :label-width="formLabelWidth">
               <el-date-picker
@@ -234,12 +244,12 @@ const resetSearch = async () =>{
               />
             </el-form-item>
             <el-form-item label="预算(元)" :label-width="formLabelWidth">
-              <el-input v-model="form.budget" autocomplete="on" />
+              <el-input type="number" v-model="form.budget" autocomplete="on" placeholder="请输入金额，如1000.8" />
             </el-form-item>
           </el-form>
           <template #footer>
             <div class="dialog-footer">
-              <el-button @click="handleAdd">取消</el-button>
+              <el-button @click="addFormVisible = false">取消</el-button>
               <el-button type="primary" @click="addProject(form)">
                 确认添加
               </el-button>
@@ -260,8 +270,8 @@ const resetSearch = async () =>{
             <el-form-item label="项目级别" :label-width="formLabelWidth">
               <el-input v-model="form.projectLevel" autocomplete="on" />
             </el-form-item>
-            <el-form-item label="负责人ID" :label-width="formLabelWidth">
-              <el-input v-model="form.managerID" autocomplete="on" />
+            <el-form-item label="负责人姓名" :label-width="formLabelWidth">
+              <el-input v-model="form.managerName" autocomplete="on" />
             </el-form-item>
             <el-form-item label="立项日期" :label-width="formLabelWidth">
               <el-date-picker
@@ -273,7 +283,7 @@ const resetSearch = async () =>{
               />
             </el-form-item>
             <el-form-item label="预算(元)" :label-width="formLabelWidth">
-              <el-input v-model="form.budget" autocomplete="on" />
+              <el-input type="number" v-model="form.budget" autocomplete="on" placeholder="请输入金额，如1000.8" />
             </el-form-item>
           </el-form>
           <template #footer>
@@ -285,6 +295,7 @@ const resetSearch = async () =>{
             </div>
           </template>
         </el-dialog>
+
       </el-main>
     </el-container>
   </div>
