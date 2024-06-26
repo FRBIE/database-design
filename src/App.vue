@@ -4,7 +4,7 @@
     <el-header class="header" v-if="!isLoginPage">
       <div class="header-content">
         <div class="logo-section">
-          <img src="../../../public/favicon.ico" alt="Logo" class="logo" />
+          <img src="/favicon.ico" alt="Logo" class="logo" />
           <span class="system-name">项目管理系统</span>
         </div>
         <div class="logout-section">
@@ -53,7 +53,7 @@
 export default {
   computed: {
     isLoginPage() {
-      return this.$route.path === '/login';
+      return this.$route.path === '/login' ;
     }
   },
   methods: {

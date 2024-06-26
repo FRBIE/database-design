@@ -40,10 +40,6 @@ const deleteProject= async (id) =>{
   }
 }
 
-onMounted(() => {
-  getProjectList();
-});
-
 
 const editFormVisible = ref(false)
 const addFormVisible = ref(false)
@@ -144,6 +140,9 @@ const resetSearch = async () =>{
   searchParams.budget = "";
   getProjectList();
 }
+onMounted(() => {
+  getProjectList();
+});
 </script>
 
 <template>
