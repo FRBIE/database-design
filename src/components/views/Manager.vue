@@ -2,7 +2,13 @@
 import {onMounted, reactive, ref} from "vue";
 import axios from "axios";
 import manager from "@/components/views/Manager.vue";
-
+let checkdUnitIDList = ref<number[]>([]);
+interface Unit {
+  unitID: string
+  unitName: string
+}
+// 定义一个 ref 来存储单位列表数据
+let unitList = ref<Unit[]>([]);
 interface manager {
   managerID: string
   managerName: string
@@ -11,9 +17,9 @@ interface manager {
 }
 
 
-// 定义一个 ref 来存储单位列表数据
+// 定义一个 ref 来存储负责人列表数据
 let managerList = ref([]);
-// 定义获取单位列表的函数
+// 定义获取负责人列表的函数
 const getmanagerList = async () => {
   try {
     const response = await axios.get('/manager/list');
@@ -25,11 +31,25 @@ const getmanagerList = async () => {
         [Object.keys(unit)[0]]: unit[Object.keys(unit)[0]]
       }))
     }));
+
+
+
   } catch (error) {
-    console.error('获取单位列表数据时出错:', error);
+    console.error('获取负责人列表数据时出错:', error);
   }
 };
+const getunitList = async () =>{
 
+  try {
+    const response = await axios.get('/unit/list');
+    unitList.value = response.data.data;
+  }catch (error)
+  {
+    console.error('获取单位列表数据时出错:', error);
+  }
+
+
+}
 
 
 const deletemanager= async (id) =>{
@@ -39,12 +59,13 @@ const deletemanager= async (id) =>{
     });
     getmanagerList();
   }catch (error){
-    console.log('删除单位出错:',error);
+    console.log('删除负责人出错:',error);
   }
 }
 
 onMounted(() => {
   getmanagerList();
+  getunitList();
 });
 
 
@@ -53,29 +74,82 @@ const addFormVisible = ref(false)
 const form = ref(manager);
 const formLabelWidth = '140px'
 const handleEdit = (index: number, row: manager) => {
+
   editFormVisible.value = true;
-  Object.assign(form.value, row);
+
+
+
+
+  // Set checkdUnitIDList based on row's unitNameList
+  checkdUnitIDList.value = row.unitNameList.map((unit) => parseInt(Object.keys(unit)[0]));
+  console.log('checkdUnitIDList:', checkdUnitIDList.value);
+
+  form.value = {
+    managerID: row.managerID,
+    managerName: row.managerName,
+    age: row.age,
+  };
 
 }
+
 const handleAdd = () => {
   form.value = {
     managerID: '',
     managerName: '',
     age: '',
   };
+  checkdUnitIDList.value = [];
   addFormVisible.value = true;
 }
-const handleDelete = (index: number, row: manager) => {
-  alert(row.managerID)
-}
+const handleDelete = async ( row: manager) => {
 
-const editmanager = (form: manager) => {
-  alert(form.managerID)
-  editFormVisible.value = false;
-}
-const addmanager = (form:manager) => {
+    try {
+      const response = await axios.post('/manager/delete',{
+        id: row.managerID
+      });
+      getmanagerList();
+      alert("删除成功")
+    }catch (error){
+      console.log('删除负责人出错:',error);
+    }
 
-  addFormVisible.value = false;
+}
+const editmanager = async (form: manager,checkdUnitIDList:number[]) => {
+  try {
+    // 发起异步请求获取项目列表数据
+    const response = await axios.post('/manager/edit', {
+      manager:form,
+      checkdUnitIDList
+    });
+    if(response.data.code === 0){
+      getmanagerList();
+      alert("修改成功")
+      editFormVisible.value = false;
+    }else{
+      alert(response.data.description);
+    }
+  } catch (error) {
+    alert('修改失败，请重试');
+  }
+}
+const addmanager = async (form:manager,checkdUnitIDList:number[]) => {
+  try {
+    // 发起异步请求获取单位列表数据
+    const response = await axios.post("/manager/add",{
+      manager:form,
+      checkdUnitIDList
+    })
+    if(response.data.code === 0){
+      getmanagerList();
+      alert("添加成功")
+      addFormVisible.value = false;
+    }else{
+      alert(response.data.description);
+    }
+  } catch (error) {
+    alert('添加失败，请重试');
+  }
+
 }
 const searchParams = reactive({
   managerID: '',
@@ -85,6 +159,7 @@ const searchParams = reactive({
 const search = (searchParams: manager) => {
   alert(searchParams.managerID)
 }
+
 </script>
 
 <template>
@@ -126,51 +201,46 @@ const search = (searchParams: manager) => {
           <el-table-column align="right">
             <template #header>
               <el-button size="small" type="success" @click="handleAdd">
-                Add
+                添加负责人
               </el-button>
             </template>
             <template #default="scope">
               <el-button size="small"  type="info" @click="handleEdit(scope.$index, scope.row)">
-                Edit
+                修改
               </el-button>
               <el-button
                   size="small"
                   type="danger"
-                  @click="handleDelete(scope.$index, scope.row)"
+                  @click="handleDelete(scope.row)"
               >
-                Delete
+                删除
               </el-button>
             </template>
           </el-table-column>
         </el-table>
 
 
-        <el-dialog v-model="addFormVisible" title="增加单位" width="500">
+        <el-dialog v-model="addFormVisible" title="增加负责人" width="500">
           <el-form :model="form">
-            <el-form-item label="负责人ID" :label-width="formLabelWidth">
-              <el-input v-model="form.managerID" autocomplete="on" />
-            </el-form-item>
             <el-form-item label="负责人名称" :label-width="formLabelWidth">
               <el-input v-model="form.managerName" autocomplete="on" />
             </el-form-item>
             <el-form-item label="年龄" :label-width="formLabelWidth">
               <el-input v-model="form.age" autocomplete="on" />
             </el-form-item>
-
-            <el-form-item label="所属单位：" :label-width="formLabelWidth">
-              <el-select v-model="form.unitNameList" clearable>
-                <el-option-group v-for="(group, groupIndex) in managerList" :key="groupIndex" >
-                  <el-option v-for="(unit, unitIndex) in group.unitNameList" :key="unitIndex" :label="`${Object.keys(unit)[0]} - ${unit[Object.keys(unit)[0]]}`" :value="unit">
-                  </el-option>
-                </el-option-group>
-              </el-select>
+            <el-form-item label="所属单位" :label-width="formLabelWidth">
+              <el-checkbox-group v-model="checkdUnitIDList">
+                <el-checkbox v-for="unit in unitList" :key="unit.unitID" :label="unit.unitID">
+                  {{ unit.unitID}} - {{ unit.unitName }}
+                </el-checkbox>
+              </el-checkbox-group>
             </el-form-item>
 
           </el-form>
           <template #footer>
             <div class="dialog-footer">
-              <el-button @click="handleAdd">取消</el-button>
-              <el-button type="primary" @click="addmanager(form)">
+              <el-button @click="addFormVisible == false">取消</el-button>
+              <el-button type="primary" @click="addmanager(form,checkdUnitIDList)">
                 确认
               </el-button>
             </div>
@@ -179,7 +249,7 @@ const search = (searchParams: manager) => {
 
 
 
-        <el-dialog v-model="editFormVisible" title="单位信息修改" width="500">
+        <el-dialog v-model="editFormVisible" title="负责人信息修改" width="500">
           <el-form :model="form">
             <el-form-item label="负责人ID" :label-width="formLabelWidth">
               <el-input v-model="form.managerID" autocomplete="on" />
@@ -190,12 +260,29 @@ const search = (searchParams: manager) => {
             <el-form-item label="年龄" :label-width="formLabelWidth">
               <el-input v-model="form.age" autocomplete="on" />
             </el-form-item>
+<!--            <el-form-item label="所属单位" :label-width="formLabelWidth">-->
+<!--              <el-checkbox-group v-model="checkdUnitIDList">-->
+<!--                <el-checkbox v-for="unit in unitList" :key="Object.keys(unit)[0]" :label="Object.keys(unit)[0]">-->
+            <!--                  当 checkdUnitIDList 中包含某个复选框的 label 值时，该复选框才会被选中。
+                                  所以       :label="parseInt(Object.keys(unit)[0]才能正常显示                                                                 -->
+<!--                  {{ Object.keys(unit)[0] }} - {{ unit[Object.keys(unit)[0]] }}-->
+<!--                </el-checkbox>-->
+<!--              </el-checkbox-group>-->
+<!--            </el-form-item>-->
+            <el-form-item label="所属单位" :label-width="formLabelWidth">
+              <el-checkbox-group v-model="checkdUnitIDList">
+                <el-checkbox v-for="unit in unitList" :key="unit.unitID" :label="unit.unitID">
+                  {{ unit.unitID}} - {{ unit.unitName }}
+                </el-checkbox>
+              </el-checkbox-group>
+            </el-form-item>
+
           </el-form>
           <template #footer>
             <div class="dialog-footer">
-              <el-button @click="editFormVisible = false">Cancel</el-button>
-              <el-button type="primary" @click="editmanager(form)">
-                Confirm
+              <el-button @click="editFormVisible = false">取消</el-button>
+              <el-button type="primary" @click="editmanager(form,checkdUnitIDList)">
+                确认修改
               </el-button>
             </div>
           </template>
