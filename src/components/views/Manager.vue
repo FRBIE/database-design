@@ -7,23 +7,31 @@ interface manager {
   managerID: string
   managerName: string
   age: string
+  unitNameList: { [key: number]: string }[]; // 注意这里是对象数组
 }
 
 
 // 定义一个 ref 来存储单位列表数据
 let managerList = ref([]);
-
 // 定义获取单位列表的函数
 const getmanagerList = async () => {
   try {
-    // 发起异步请求获取单位列表数据
     const response = await axios.get('/manager/list');
-    // 更新单位列表数据，使用 .value 来访问 ref 的值
-    managerList.value = response.data.data;
+    managerList.value = response.data.data.map((item: any) => ({
+      managerID: item.managerID,
+      managerName: item.managerName,
+      age: item.age,
+      unitNameList: item.unitNameList.map((unit: { [key: number]: string }) => ({
+        [Object.keys(unit)[0]]: unit[Object.keys(unit)[0]]
+      }))
+    }));
   } catch (error) {
     console.error('获取单位列表数据时出错:', error);
   }
 };
+
+
+
 const deletemanager= async (id) =>{
   try {
     const response = await axios.post('/manager/delete',{
@@ -65,7 +73,8 @@ const editmanager = (form: manager) => {
   alert(form.managerID)
   editFormVisible.value = false;
 }
-const addmanager = () => {
+const addmanager = (form:manager) => {
+
   addFormVisible.value = false;
 }
 const searchParams = reactive({
@@ -104,6 +113,16 @@ const search = (searchParams: manager) => {
           <el-table-column prop="managerID" label="负责人ID" width="180" />
           <el-table-column prop="managerName" label="负责人名称" width="180" />
           <el-table-column prop="age" label="年龄" width="180" />
+          <el-table-column prop="unitNameList" label="所属单位(单位ID-单位名称)" width="250">
+            <template #default="{ row }">
+              <div>
+                  <span v-for="(unit, index) in row.unitNameList" :key="index">
+                    {{ Object.keys(unit)[0] }} - {{ unit[Object.keys(unit)[0]] }}
+                    <br>
+                  </span>
+              </div>
+            </template>
+          </el-table-column>
           <el-table-column align="right">
             <template #header>
               <el-button size="small" type="success" @click="handleAdd">
@@ -137,11 +156,21 @@ const search = (searchParams: manager) => {
             <el-form-item label="年龄" :label-width="formLabelWidth">
               <el-input v-model="form.age" autocomplete="on" />
             </el-form-item>
+
+            <el-form-item label="所属单位：" :label-width="formLabelWidth">
+              <el-select v-model="form.unitNameList" clearable>
+                <el-option-group v-for="(group, groupIndex) in managerList" :key="groupIndex" >
+                  <el-option v-for="(unit, unitIndex) in group.unitNameList" :key="unitIndex" :label="`${Object.keys(unit)[0]} - ${unit[Object.keys(unit)[0]]}`" :value="unit">
+                  </el-option>
+                </el-option-group>
+              </el-select>
+            </el-form-item>
+
           </el-form>
           <template #footer>
             <div class="dialog-footer">
               <el-button @click="handleAdd">取消</el-button>
-              <el-button type="primary" @click="addmanager()">
+              <el-button type="primary" @click="addmanager(form)">
                 确认
               </el-button>
             </div>

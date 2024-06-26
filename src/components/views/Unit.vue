@@ -57,24 +57,76 @@ const handleAdd = () => {
   };
   addFormVisible.value = true;
 }
-const handleDelete = (index: number, row: Unit) => {
-  alert(row.unitID)
+const handleDelete = async (row: Unit) => {
+  try {
+    const response =  await axios.post('/unit/delete', {
+      id: row.unitID
+    });
+    if(response.data.code === 0){
+      getUnitList();
+      alert("删除成功")
+    }
+  } catch (error) {
+    alert('删除失败，请重试');
+  }
 }
 
-const editUnit = (form: Unit) => {
-  alert(form.unitID)
-  editFormVisible.value = false;
+const editUnit = async (form: Unit) => {
+  try {
+    const response = await axios.post('/unit/edit', form);
+    if(response.data.code === 0){
+      getUnitList();
+      alert("修改成功")
+      editFormVisible.value = false;
+    }else{
+      alert(response.data.description);
+    }
+  } catch (error) {
+    alert('修改失败，请重试');
+  }
 }
-const addUnit = () => {
-  addFormVisible.value = false;
+const addUnit = async (form: Unit)=> {
+  try {
+    // 发起异步请求获取单位列表数据
+    const response = await axios.post('/unit/add', form);
+    if(response.data.code === 0){
+      getUnitList();
+      alert("添加成功")
+      addFormVisible.value = false;
+    }else{
+      alert(response.data.description);
+    }
+  } catch (error) {
+    alert('添加失败，请重试');
+  }
 }
 const searchParams = reactive({
   unitID: '',
   unitName: '',
   address: '',
 })
-const search = (searchParams: Unit) => {
-  alert(searchParams.unitID)
+const loading = ref(false) //动态效果-加载动画
+const search = async (searchParams: Unit) => {
+  loading.value = true;
+  try {
+    // 发起异步请求获取项目列表数据
+    const response = await axios.post('/unit/search', searchParams);
+    if(response.data.code === 0){
+      unitList.value = response.data.data;
+
+    }else{
+      alert(response.data.description);
+    }
+  } catch (error) {
+    alert('搜索失败，请重试');
+  }
+  loading.value = false;
+}
+const resetSearch = async () =>{
+  searchParams.unitName="";
+  searchParams.unitID="";
+  searchParams.address="";
+  getUnitList();
 }
 </script>
 
@@ -95,31 +147,34 @@ const search = (searchParams: Unit) => {
           <el-form-item>
             <el-button type="primary" @click="search(searchParams)">查询</el-button>
           </el-form-item>
+          <el-form-item>
+            <el-button type="danger" @click="resetSearch">重置</el-button>
+          </el-form-item>
         </el-form>
       </el-header>
       <br>
       <br>
       <el-main>
-        <el-table :data="unitList" style="width: 100%">
+        <el-table :data="unitList" style="width: 100%" v-loading="loading">
           <el-table-column prop="unitID" label="单位ID" width="180" />
           <el-table-column prop="unitName" label="单位名称" width="180" />
-          <el-table-column prop="address" label="单位地址" width="180" />
+          <el-table-column prop="address" label="单位地址" width="500" />
           <el-table-column align="right">
             <template #header>
               <el-button size="small" type="success" @click="handleAdd">
-                Add
+                添加单位
               </el-button>
             </template>
             <template #default="scope">
               <el-button size="small"  type="info" @click="handleEdit(scope.$index, scope.row)">
-                Edit
+                编辑
               </el-button>
               <el-button
                   size="small"
                   type="danger"
-                  @click="handleDelete(scope.$index, scope.row)"
+                  @click="handleDelete(scope.row)"
               >
-                Delete
+                删除
               </el-button>
             </template>
           </el-table-column>
@@ -128,9 +183,9 @@ const search = (searchParams: Unit) => {
 
         <el-dialog v-model="addFormVisible" title="增加单位" width="500">
           <el-form :model="form">
-            <el-form-item label="单位ID" :label-width="formLabelWidth">
-              <el-input v-model="form.unitID" autocomplete="on" />
-            </el-form-item>
+<!--            <el-form-item label="单位ID" :label-width="formLabelWidth">-->
+<!--              <el-input v-model="form.unitID" autocomplete="on" />-->
+<!--            </el-form-item>-->
             <el-form-item label="单位名称" :label-width="formLabelWidth">
               <el-input v-model="form.unitName" autocomplete="on" />
             </el-form-item>
@@ -140,8 +195,8 @@ const search = (searchParams: Unit) => {
           </el-form>
           <template #footer>
             <div class="dialog-footer">
-              <el-button @click="handleAdd">取消</el-button>
-              <el-button type="primary" @click="addUnit()">
+              <el-button @click="addFormVisible = false">取消</el-button>
+              <el-button type="primary" @click="addUnit(form)">
                 确认
               </el-button>
             </div>
@@ -153,7 +208,7 @@ const search = (searchParams: Unit) => {
         <el-dialog v-model="editFormVisible" title="单位信息修改" width="500">
           <el-form :model="form">
             <el-form-item label="单位ID" :label-width="formLabelWidth">
-              <el-input v-model="form.unitID" autocomplete="on" />
+              <el-input v-model="form.unitID" autocomplete="on"  :disabled="true"/>
             </el-form-item>
             <el-form-item label="单位名称" :label-width="formLabelWidth">
               <el-input v-model="form.unitName" autocomplete="on" />
@@ -164,9 +219,9 @@ const search = (searchParams: Unit) => {
           </el-form>
           <template #footer>
             <div class="dialog-footer">
-              <el-button @click="editFormVisible = false">Cancel</el-button>
+              <el-button @click="editFormVisible = false">取消</el-button>
               <el-button type="primary" @click="editUnit(form)">
-                Confirm
+                确认修改
               </el-button>
             </div>
           </template>
