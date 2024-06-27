@@ -276,9 +276,6 @@ const resetSearch = async () =>{
 
         <el-dialog v-model="editFormVisible" title="负责人信息修改" width="500">
           <el-form :model="form">
-            <el-form-item label="负责人ID" :label-width="formLabelWidth">
-              <el-input v-model="form.managerID" autocomplete="on" />
-            </el-form-item>
             <el-form-item label="负责人名称" :label-width="formLabelWidth">
               <el-input v-model="form.managerName" autocomplete="on" />
             </el-form-item>

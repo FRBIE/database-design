@@ -207,9 +207,9 @@ const resetSearch = async () =>{
 
         <el-dialog v-model="editFormVisible" title="单位信息修改" width="500">
           <el-form :model="form">
-            <el-form-item label="单位ID" :label-width="formLabelWidth">
-              <el-input v-model="form.unitID" autocomplete="on"  :disabled="true"/>
-            </el-form-item>
+<!--            <el-form-item label="单位ID" :label-width="formLabelWidth">-->
+<!--              <el-input v-model="form.unitID" autocomplete="on"  :disabled="true"/>-->
+<!--            </el-form-item>-->
             <el-form-item label="单位名称" :label-width="formLabelWidth">
               <el-input v-model="form.unitName" autocomplete="on" />
             </el-form-item>

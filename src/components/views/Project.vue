@@ -260,9 +260,9 @@ onMounted(() => {
 
         <el-dialog v-model="editFormVisible" title="项目信息修改" width="500">
           <el-form :model="form">
-            <el-form-item label="项目ID" :label-width="formLabelWidth">
-              <el-input v-model="form.projectID" autocomplete="on" :disabled="true"/>
-            </el-form-item>
+<!--            <el-form-item label="项目ID" :label-width="formLabelWidth">-->
+<!--              <el-input v-model="form.projectID" autocomplete="on" :disabled="true"/>-->
+<!--            </el-form-item>-->
             <el-form-item label="项目名称" :label-width="formLabelWidth">
               <el-input v-model="form.projectName" autocomplete="on" />
             </el-form-item>
