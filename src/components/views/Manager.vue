@@ -264,7 +264,7 @@ const resetSearch = async () =>{
           </el-form>
           <template #footer>
             <div class="dialog-footer">
-              <el-button @click="addFormVisible == false">取消</el-button>
+              <el-button @click="addFormVisible = false">取消</el-button>
               <el-button type="primary" @click="addmanager(form,checkdUnitIDList)">
                 确认
               </el-button>
