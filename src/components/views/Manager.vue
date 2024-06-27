@@ -14,7 +14,7 @@ interface manager {
   managerName: string
   age: string
   unitNameList: { [key: number]: string }[]; // 注意这里是对象数组
-  totalAmount:number
+  totalAmount:string
 }
 
 
@@ -215,9 +215,7 @@ const resetSearch = async () =>{
           <el-table-column prop="managerID" label="负责人ID" width="180" />
           <el-table-column prop="managerName" label="负责人名称" width="180" />
           <el-table-column prop="age" label="年龄" width="180" />
-          <el-table-column prop="unitNameList" label="所属单位(单位ID-单位名称)" width="250"/>
-            <el-table-column prop="totalAmount" label="负责项目总金额(元)" width="250">
-
+          <el-table-column prop="unitNameList" label="所属单位(单位ID-单位名称)" width="250">
             <template #default="{ row }">
               <div>
                   <span v-for="(unit, index) in row.unitNameList" :key="index">
@@ -227,6 +225,7 @@ const resetSearch = async () =>{
               </div>
             </template>
           </el-table-column>
+          <el-table-column prop="totalAmount" label="负责项目总金额(元)" width="250"/>
           <el-table-column align="right">
             <template #header>
               <el-button size="small" type="success" @click="handleAdd">
