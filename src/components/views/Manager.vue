@@ -155,11 +155,30 @@ const searchParams = reactive({
   managerID: '',
   managerName: '',
   age: '',
+  unitName:''
 })
-const search = (searchParams: manager) => {
-  alert(searchParams.managerID)
-}
+const search = async (params) => {
 
+  try {
+    // 发起异步请求获取项目列表数据
+    const response = await axios.post('/manager/search', params);
+    if(response.data.code === 0){
+      managerList.value = response.data.data;
+
+    }else{
+      alert(response.data.description);
+    }
+  } catch (error) {
+    alert('搜索失败，请重试');
+  }
+}
+const resetSearch = async () =>{
+  searchParams.managerID="";
+  searchParams.managerName="";
+  searchParams.age="";
+  searchParams.unitName=""
+  getmanagerList();
+}
 </script>
 
 <template>
@@ -176,8 +195,14 @@ const search = (searchParams: manager) => {
           <el-form-item label="年龄">
             <el-input v-model="searchParams.age" placeholder="年龄" clearable />
           </el-form-item>
+          <el-form-item label="所属单位">
+            <el-input v-model="searchParams.unitName" placeholder="所属单位" clearable />
+          </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="search(searchParams)">查询</el-button>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="danger" @click="resetSearch">重置</el-button>
           </el-form-item>
         </el-form>
       </el-header>
